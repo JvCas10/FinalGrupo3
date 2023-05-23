@@ -1,0 +1,97 @@
+//incluye la libreria para el teclado matricial
+#include <Keypad.h>
+
+class Seguridad{
+  private:
+    //Marcador pocicional
+    #define salida(pin) pinMode(pin,OUTPUT); 
+    #define entrada(pin) pinMode(pin,INPUT);
+    #define on(pin) tone(pin,100);
+    #define of(pin) noTone(pin);
+    const int FIL = 4;//variante de tipo constante 
+    const int COL = 4;
+    const int b=10;
+    const int r = 11;
+
+    int led1 = 12;
+    int led2 = 13;
+
+    int lee;
+    char keys[4][4]={
+    {'1','2','3','A'},
+    {'4','5','6','B'},
+    {'7','8','9','C'},
+    {'*','0','#','D'}
+    };
+
+    byte f[4]={9,8,7,6};//Pines de las filas del teclado
+    byte c[4]={5,4,3,2};//Pines de las columnas del teclado
+    Keypad teclado=Keypad(makeKeymap(keys), f, c,4,4);//iguala la lectura del teclado de las columnas y filas
+    char teclaPrecionada;
+
+    char pass[6]="31106"; 
+    char ingresaPass[6]; 
+    int indice=0;
+
+
+  public:
+  void configuraSeg(int b, int r, int led1, int led2){
+    entrada(r);//define el pin de entrada del sensor
+    salida(b);//define el pin de entrada del buzzer
+    on(b);//enciende el buzzer
+    of(b);//apaga el buzzer
+    pinMode (led1, OUTPUT);
+    pinMode (led2, OUTPUT);
+  }
+
+  void alarma(int b, int r, int led1, int led2){
+    teclaPrecionada=teclado.getKey();
+    if(teclaPrecionada)
+    {// Crea un bucle que se repite constantemente 
+      ingresaPass[indice]=teclaPrecionada; 
+      indice++;
+      Serial.print(teclaPrecionada);
+    }
+
+    lee=digitalRead(r);
+
+    if (lee == 1)
+    {
+      on(b);
+      digitalWrite(led1,LOW);
+    }
+
+    if(indice==5){ 
+
+      if(strcmp(pass,ingresaPass)==0)
+      { 
+      of(b);
+        
+        //contraseña mala
+        digitalWrite(led1,HIGH);
+        digitalWrite(led2,LOW);
+        
+      }
+      else
+      {
+        digitalWrite(led1,LOW);
+        digitalWrite(led2,HIGH);
+      }   
+      
+      //-----------
+      
+    indice=0;
+    }
+  }
+};
+
+Seguridad arranque;
+
+void setup(){
+  Serial.begin(9600);
+  arranque.configuraSeg(10,11,12,13);
+}
+  
+void loop(){
+  arranque.alarma(10,11,12,13);
+}
